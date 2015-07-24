@@ -6,11 +6,20 @@ Pattern match for jdk 1.8
 
 1.  match and return
 ```java
-    String e = ".shit";
-    String re = match(e)
+String e = ".shit";
+String re = match(e)
         .when(s -> s.startsWith(".")).get(ss -> ss + "...........")
         .when(s -> s.startsWith("_")).get(ss -> ss + "_____________")
-        .doMatch();
+        .get();
+System.out.println(re);
+```
+
+2.  extend Optional
+```java
+int result = match(e)
+        .when(s -> s.startsWith("never match")).get(ss -> ss + "never match...........")
+        .getMatch().notNull(ss -> ss.length());
+System.out.println(result);
 ```
 ## License
 
