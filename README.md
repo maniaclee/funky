@@ -1,0 +1,3 @@
+# funky
+
+Some functional utilities.
