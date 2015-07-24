@@ -14,7 +14,7 @@ Pattern match for jdk 1.8
 ```
 ## License
 
-    Copyright 2015 John Leacox
+    Copyright 2015 Psyco(PengLi)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
