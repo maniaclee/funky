@@ -7,17 +7,11 @@
     <groupId>psyco</groupId>
     <artifactId>psyco.functional</artifactId>
     <version>1.0-SNAPSHOT</version>
-<<<<<<< HEAD
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -35,8 +29,4 @@
             </plugin>
         </plugins>
     </build>
-=======
-
-
->>>>>>> e09ffad1242ddc0d664d1a769e0046f615f851e6
 </project>
