@@ -87,6 +87,13 @@ public class Fucky {
             return new When1R(pre, this);
         }
 
+        public Matcher1R<T, R> orElse(R v) {
+            When1R<T, R> when = new When1R<>(e -> true, this);
+            when.function = e -> v;
+            list.add(when);
+            return this;
+        }
+
         public R get() {
             Optional<When1R<T, R>> re = list.stream().filter(when -> when.predicate.test(value)).findFirst();
             return re.isPresent() ? re.get().function.apply(value) : null;
@@ -185,6 +192,7 @@ public class Fucky {
         String re = match(e)
                 .when(s -> s.startsWith(".")).get(ss -> ss + "...........")
                 .when(s -> s.startsWith("_")).get(ss -> ss + "_____________")
+                .orElse("default value")
                 .get();
         System.out.println(re);
         int result = match(e)

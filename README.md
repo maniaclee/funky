@@ -10,6 +10,7 @@ String e = ".shit";
 String re = match(e)
         .when(s -> s.startsWith(".")).get(ss -> ss + "...........")
         .when(s -> s.startsWith("_")).get(ss -> ss + "_____________")
+        .orElse("default value")
         .get();
 System.out.println(re);
 ```
