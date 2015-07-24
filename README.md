@@ -4,7 +4,7 @@ funky
 Pattern match for jdk 1.8
 ## Examples
 
-1.  match and return
+###1.  match and return
 ```java
 String e = ".shit";
 String re = match(e)
@@ -14,7 +14,7 @@ String re = match(e)
 System.out.println(re);
 ```
 
-2.  extend Optional
+###2.  extend Optional
 ```java
 int result = match(e)
         .when(s -> s.startsWith("never match")).get(ss -> ss + "never match...........")
