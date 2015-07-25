@@ -1,6 +1,7 @@
 import org.junit.Test;
 
 import static psyco.funky.Funky.*;
+import static psyco.funky.FunkyModule.*;
 
 /**
  * Created by lipeng on 15/7/25.
@@ -31,5 +32,21 @@ public class TestFunky {
                 orElse("----no no no -----").
                 get();
         System.out.println(what);
+
+        int number = 3;
+        match(number).
+                pair(4, "four").
+                pair(6, "six").
+                orElse("whatever").
+                get();
+        System.out.println(number);
+
+
+        Matcher1R<Integer, String> match = new MatchBuilder<Integer>()
+                .when(eq(4)).get(s -> "equal")
+                .when(more(4)).get("more")
+                .orElse("little");
+        String parseResult = match.parse(4);
+        System.out.printf(parseResult);
     }
 }

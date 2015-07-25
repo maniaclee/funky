@@ -1,11 +1,11 @@
 package psyco.funky;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import static psyco.funky.FunkyModule.any;
 
 /**
  * Created by lipeng on 15/7/24.
@@ -15,47 +15,25 @@ import java.util.function.Predicate;
 public class Funky {
 
 
-    public static <T> Predicate<T> any() {
-        return e -> true;
-    }
-
-    public static <T> Predicate<T> some() {
-        return e -> true;
-    }
-
-    public static Predicate pass = e -> true;
-
-
-    public static <T> Predicate<T> eq(T value) {
-        return t -> equal(t, value);
-    }
-
-    public static <T extends Comparable> Predicate<T> more(T value) {
-        return t -> value != null ? value.compareTo(t) < 0 : t != null;
-    }
-
-    public static <T extends Comparable> Predicate<T> noLess(T value) {
-        return t -> t == value || t != null && t.compareTo(value) >= 0;
-    }
-
-    public static <T extends Comparable> Predicate<T> less(T value) {
-        return t -> t == null ? value != null : t.compareTo(value) < 0;
-    }
-
-    public static <T extends Comparable> Predicate<T> noMore(T value) {
-        return t -> t == value || t != null && t.compareTo(value) <= 0;
-    }
-
-    public static <T> Consumer<T> println(T v) {
-        return e -> System.out.println(v);
-    }
-
-    public static <T> Consumer<T> print(T v) {
-        return e -> System.out.print(v);
-    }
-
     public static <T> Match1R<T> match(T t) {
         return new Match1R(t);
+    }
+
+
+    public static class MatchBuilder<T> {
+        Match1R<T> match1R;
+
+        public <U extends T> When1<U> when(Predicate<U> predicate) {
+            return match1R.when(predicate);
+        }
+
+        public <A, B> Match2TAB<T, A, B> map(A a, B b) {
+            return match1R.map(a, b);
+        }
+
+        public <R> MatchPair<T, R> pair(T t, R v) {
+            return match1R.pair(t, v);
+        }
     }
 
     public static class Match1R<T> {
@@ -72,7 +50,45 @@ public class Funky {
         public <A, B> Match2TAB<T, A, B> map(A a, B b) {
             return new Match2TAB(value, a, b);
         }
+
+
+        public <R> MatchPair<T, R> pair(T t, R v) {
+            MatchPair re = new MatchPair(value);
+            re.map.put(t, v);
+            return re;
+        }
     }
+
+    public static class MatchPair<T, R> {
+        T t;
+        Map<T, R> map = new HashMap();
+        R defaulValue = null;
+
+        public MatchPair(T t) {
+            this.t = t;
+        }
+
+        public MatchPair<T, R> pair(T t, R v) {
+            map.put(t, v);
+            return this;
+        }
+
+        public R get() {
+            R re = map.get(t);
+            return re != null ? re : defaulValue;
+        }
+
+        public MatchPair<T, R> orElse(R r) {
+            this.defaulValue = r;
+            return this;
+        }
+
+        public R parse(T value) {
+            this.t = value;
+            return get();
+        }
+    }
+
 
     public static class When1<T> {
         protected T value;
@@ -141,7 +157,7 @@ public class Funky {
         }
 
         public Match1R_Consumer<T> orElse(Consumer<T> consumer) {
-            When1_Comsumer<T> when = new When1_Comsumer(pass, this);
+            When1_Comsumer<T> when = new When1_Comsumer(any(), this);
             when.consumer = consumer;
             this.conditions.add(when);
             return this;
@@ -151,6 +167,11 @@ public class Funky {
             Optional<When1_Comsumer<T>> re = conditions.stream().filter(when -> when.predicate.test(value)).findFirst();
             if (re.isPresent() && re.get().consumer != null)
                 re.get().consumer.accept(value);
+        }
+
+        public void parse(T value) {
+            this.value = value;
+            this.doMatch();
         }
     }
 
@@ -203,6 +224,11 @@ public class Funky {
             Optional<When1R<T, R>> re = list.stream().filter(when -> when.predicate.test(value)).findFirst();
             return re.isPresent() ? re.get().function.apply(value) : null;
         }
+
+        public R parse(T value) {
+            this.value = value;
+            return get();
+        }
     }
 
     public static class Match2TAB<T, A, B> {
@@ -223,6 +249,7 @@ public class Funky {
             this.predicateB = predicateB;
             return new When2TAB(this);
         }
+
     }
 
 
@@ -244,6 +271,7 @@ public class Funky {
         public <R> Match2TABR<T, A, B, R> get(R v) {
             return get(const2fun(v));
         }
+
     }
 
     public static class Match2TABR<T, A, B, R> {
@@ -271,7 +299,7 @@ public class Funky {
         }
 
         public Match2TABR<T, A, B, R> orElse(Function<T, R> fn) {
-            When2TABR<T, A, B, R> re = new When2TABR(pass, pass);
+            When2TABR<T, A, B, R> re = new When2TABR(any(), any());
             re.function = fn;
             conditions.add(re);
             return this;
@@ -279,6 +307,11 @@ public class Funky {
 
         public Match2TABR<T, A, B, R> orElse(R v) {
             return orElse(const2fun(v));
+        }
+
+        public R parse(T value) {
+            this.t = value;
+            return get();
         }
 
     }
@@ -307,10 +340,6 @@ public class Funky {
 
     private static <T, R> Function<T, R> const2fun(R v) {
         return t -> v;
-    }
-
-    private static <T> boolean equal(T v, T t) {
-        return v == t || v != null && v.equals(t);
     }
 
 

@@ -34,6 +34,25 @@ Pattern match for jdk 1.8
                 get();
         System.out.println(what);
 ```
+###4.   pair match
+```java
+        int number = 3;
+        match(number).
+                pair(4, "four").
+                pair(6, "six").
+                orElse("whatever").
+                get();
+        System.out.println(number);               
+```
+###5.  builder for reuse 
+```java
+        Matcher1R<Integer, String> match = new MatchBuilder<Integer>()
+                .when(eq(4)).get(s -> "equal")
+                .when(more(4)).get("more")
+                .orElse("little");
+        String parseResult = match.parse(4);
+        System.out.printf(parseResult);
+```
 ## License
 
     Copyright 2015 Psyco (Peng Li)
