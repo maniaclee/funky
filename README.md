@@ -1,7 +1,7 @@
 funky
 =====
 
-Pattern match for jdk 1.8
+Pattern match and Pattern builder for Java 8
 ## Examples
 
 ###1.  match and return
