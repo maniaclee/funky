@@ -6,7 +6,7 @@ Pattern match and Pattern builder for Java 8
 
 ###1.  match and return
 ```java
-  int num = 1;
+        int num = 1;
         String re = match(num)
                 .when(eq(4)).get(s -> "equal")
                 .when(more(4)).get("more")
