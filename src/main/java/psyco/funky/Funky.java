@@ -12,7 +12,7 @@ import java.util.function.Predicate;
  * pattern match with Java 8, like:
  * match().when().when().else().get()
  */
-public class Fucky {
+public class Funky {
 
     public static Predicate pass = e -> true;
 

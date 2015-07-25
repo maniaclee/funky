@@ -1,11 +1,11 @@
 import org.junit.Test;
 
-import static psyco.funky.Fucky.*;
+import static psyco.funky.Funky.*;
 
 /**
  * Created by lipeng on 15/7/25.
  */
-public class TestFucky {
+public class TestFunky {
     @Test
     public void test() {
         int num = 1;
