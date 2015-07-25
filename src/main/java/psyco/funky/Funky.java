@@ -14,7 +14,17 @@ import java.util.function.Predicate;
  */
 public class Funky {
 
+
+    public static <T> Predicate<T> any() {
+        return e -> true;
+    }
+
+    public static <T> Predicate<T> some() {
+        return e -> true;
+    }
+
     public static Predicate pass = e -> true;
+
 
     public static <T> Predicate<T> eq(T value) {
         return t -> equal(t, value);

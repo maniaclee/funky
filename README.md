@@ -29,7 +29,7 @@ Pattern match for jdk 1.8
         String what = match(logo).
                 map(logo.length(), logo.charAt(0)).
                 when(more(10), eq('f')).get("").
-                when(less(8), eq('a')).get(s -> "too short:" + s).
+                when(less(8), any()).get(s -> "too short:" + s).
                 orElse("----no no no -----").
                 get();
         System.out.println(what);
