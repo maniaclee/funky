@@ -6,25 +6,37 @@ Pattern match for jdk 1.8
 
 ###1.  match and return
 ```java
-String e = ".shit";
-String re = match(e)
-        .when(s -> s.startsWith(".")).get(ss -> ss + "...........")
-        .when(s -> s.startsWith("_")).get(ss -> ss + "_____________")
-        .orElse("default value")
-        .get();
-System.out.println(re);
+  int num = 1;
+        String re = match(num)
+                .when(eq(4)).get(s -> "equal")
+                .when(more(4)).get("more")
+                .orElse("little")
+                .get();
+        System.out.println(re);
 ```
 
-###2.  extend Optional
+###2.  match and then
 ```java
-int result = match(e)
-        .when(s -> s.startsWith("never match")).get(ss -> ss + "never match...........")
-        .getMatch().notNull(ss -> ss.length());
-System.out.println(result);
+        String e = "shit";
+        match(e).when(s -> s.startsWith(".")).then(s -> System.out.printf(s + "..........."))
+                .when(s -> s.startsWith("_")).then(s -> System.out.printf(s + "_____________"))
+                .orElse(s -> System.out.println("nothing match"))
+                .doMatch();
+```
+###3.  map with Tuple
+```java
+        String logo = "ano";
+        String what = match(logo).
+                map(logo.length(), logo.charAt(0)).
+                when(more(10), eq('f')).get("").
+                when(less(8), eq('a')).get(s -> "too short:" + s).
+                orElse("----no no no -----").
+                get();
+        System.out.println(what);
 ```
 ## License
 
-    Copyright 2015 Psyco(PengLi)
+    Copyright 2015 Psyco (Peng Li)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
