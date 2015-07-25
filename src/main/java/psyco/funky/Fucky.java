@@ -1,42 +1,63 @@
 package psyco.funky;
 
-import org.junit.Test;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * Created by lipeng on 15/7/24.
+ * pattern match with Java 8, like:
+ * match().when().when().else().get()
  */
 public class Fucky {
-    /**
-     * match().case().case().get()
-     */
 
+    public static Predicate pass = e -> true;
 
-    public static <T> Match1<T> match(T t) {
-        return new Match1(t);
+    public static <T> Predicate<T> eq(T value) {
+        return t -> equal(t, value);
     }
 
-    public static class Match1<T> {
-        T value;
+    public static <T extends Comparable> Predicate<T> more(T value) {
+        return t -> value != null ? value.compareTo(t) < 0 : t != null;
+    }
 
-        public Match1(T value) {
+    public static <T extends Comparable> Predicate<T> noLess(T value) {
+        return t -> t == value || t != null && t.compareTo(value) >= 0;
+    }
+
+    public static <T extends Comparable> Predicate<T> less(T value) {
+        return t -> t == null ? value != null : t.compareTo(value) < 0;
+    }
+
+    public static <T extends Comparable> Predicate<T> noMore(T value) {
+        return t -> t == value || t != null && t.compareTo(value) <= 0;
+    }
+
+    public static <T> Match1R<T> match(T t) {
+        return new Match1R(t);
+    }
+
+    public static class Match1R<T> {
+        protected T value;
+
+        public Match1R(T value) {
             this.value = value;
         }
 
         public <U extends T> When1<U> when(Predicate<U> predicate) {
             return new When1(value, predicate);
         }
+
+        public <A, B> Match2TAB<T, A, B> map(A a, B b) {
+            return new Match2TAB(value, a, b);
+        }
     }
 
-    static class When1<T> {
-        T value;
+    public static class When1<T> {
+        protected T value;
         Predicate<T> predicate;
 
         public When1(T value, Predicate<T> predicate) {
@@ -56,9 +77,67 @@ public class Fucky {
             re.list.add(when);
             return re;
         }
+
+        public <R> Matcher1R<T, R> get(R v) {
+            return get(const2fun(v));
+        }
+
+        public Match1R_Consumer<T> then(Consumer<T> consumer) {
+            Match1R_Consumer match1R_consumer = new Match1R_Consumer(value);
+            When1_Comsumer when1_comsumer = new When1_Comsumer(predicate, match1R_consumer);
+            when1_comsumer.consumer = consumer;
+            match1R_consumer.conditions.add(when1_comsumer);
+            return match1R_consumer;
+        }
     }
 
-    static class When1R<T, R> {
+    public static class When1_Comsumer<T> {
+        Consumer<T> consumer;
+        Predicate<T> predicate;
+        Match1R_Consumer<T> parent;
+
+        public When1_Comsumer(Predicate<T> predicate, Match1R_Consumer<T> parent) {
+            this.predicate = predicate;
+            this.parent = parent;
+        }
+
+        public Match1R_Consumer<T> then(Consumer<T> consumer) {
+            this.consumer = consumer;
+            parent.conditions.add(this);
+            return parent;
+        }
+    }
+
+
+    public static class Match1R_Consumer<T> {
+        T value;
+        List<When1_Comsumer<T>> conditions = new LinkedList<>();
+
+
+        public Match1R_Consumer(T value) {
+            this.value = value;
+        }
+
+        public When1_Comsumer<T> when(Predicate<T> predicate) {
+            return new When1_Comsumer(predicate, this);
+        }
+
+        public Match1R_Consumer<T> orElse(Consumer<T> consumer) {
+            When1_Comsumer<T> when = new When1_Comsumer(pass, this);
+            when.consumer = consumer;
+            this.conditions.add(when);
+            return this;
+        }
+
+        public void doMatch() {
+            Optional<When1_Comsumer<T>> re = conditions.stream().filter(when -> when.predicate.test(value)).findFirst();
+            if (re.isPresent() && re.get().consumer != null)
+                re.get().consumer.accept(value);
+        }
+    }
+
+
+    public static class When1R<T, R> {
         Predicate<T> predicate;
         Function<T, R> function;
         Matcher1R<T, R> parent;
@@ -73,10 +152,14 @@ public class Fucky {
             parent.list.add(this);
             return parent;
         }
+
+        public Matcher1R<T, R> get(R v) {
+            return get(const2fun(v));
+        }
     }
 
 
-    static class Matcher1R<T, R> {
+    public static class Matcher1R<T, R> {
         T value;
         List<When1R<T, R>> list = new LinkedList<>();
 
@@ -88,8 +171,12 @@ public class Fucky {
         }
 
         public Matcher1R<T, R> orElse(R v) {
+            return orElse(e -> v);
+        }
+
+        public Matcher1R<T, R> orElse(Function<T, R> f) {
             When1R<T, R> when = new When1R<>(e -> true, this);
-            when.function = e -> v;
+            when.function = f;
             list.add(when);
             return this;
         }
@@ -98,108 +185,115 @@ public class Fucky {
             Optional<When1R<T, R>> re = list.stream().filter(when -> when.predicate.test(value)).findFirst();
             return re.isPresent() ? re.get().function.apply(value) : null;
         }
+    }
 
-        public OptionHolder<T> getMatch() {
-            return new OptionHolder(list.stream().filter(when -> when.predicate.test(value)).findFirst());
+    public static class Match2TAB<T, A, B> {
+        T t;
+        A a;
+        B b;
+        Predicate<A> predicateA;
+        Predicate<B> predicateB;
+
+        public Match2TAB(T t, A a, B b) {
+            this.t = t;
+            this.a = a;
+            this.b = b;
+        }
+
+        public When2TAB<T, A, B> when(Predicate<A> predicateA, Predicate<B> predicateB) {
+            this.predicateA = predicateA;
+            this.predicateB = predicateB;
+            return new When2TAB(this);
+        }
+    }
+
+
+    public static class When2TAB<T, A, B> {
+        Match2TAB<T, A, B> matchInitial;
+
+        public When2TAB(Match2TAB<T, A, B> matchInitial) {
+            this.matchInitial = matchInitial;
+        }
+
+        public <R> Match2TABR<T, A, B, R> get(Function<T, R> fn) {
+            When2TABR<T, A, B, R> condition = new When2TABR(matchInitial.predicateA, matchInitial.predicateB);
+            condition.function = fn;
+            Match2TABR<T, A, B, R> re = new Match2TABR(matchInitial.t, matchInitial.a, matchInitial.b);
+            re.conditions.add(condition);
+            return re;
+        }
+
+        public <R> Match2TABR<T, A, B, R> get(R v) {
+            return get(const2fun(v));
+        }
+    }
+
+    public static class Match2TABR<T, A, B, R> {
+        T t;
+        A a;
+        B b;
+        List<When2TABR<T, A, B, R>> conditions = new LinkedList<>();
+
+        public Match2TABR(T t, A a, B b) {
+            this.t = t;
+            this.a = a;
+            this.b = b;
+        }
+
+        public When2TABR<T, A, B, R> when(Predicate<A> predicateA, Predicate<B> predicateB) {
+            When2TABR<T, A, B, R> re = new When2TABR(predicateA, predicateB);
+            re.parent = this;
+            conditions.add(re);
+            return re;
+        }
+
+        public R get() {
+            Optional<When2TABR<T, A, B, R>> re = conditions.stream().filter(when -> when.predicateA.test(a) && when.predicateB.test(b)).findFirst();
+            return re.isPresent() ? re.get().function.apply(t) : null;
+        }
+
+        public Match2TABR<T, A, B, R> orElse(Function<T, R> fn) {
+            When2TABR<T, A, B, R> re = new When2TABR(pass, pass);
+            re.function = fn;
+            conditions.add(re);
+            return this;
+        }
+
+        public Match2TABR<T, A, B, R> orElse(R v) {
+            return orElse(const2fun(v));
         }
 
     }
 
+    public static class When2TABR<T, A, B, R> {
+        Predicate<A> predicateA;
+        Predicate<B> predicateB;
+        Function<T, R> function;
+        Match2TABR<T, A, B, R> parent;
 
-    public static class OptionHolder<T> {
-        Optional<T> value;
-
-        public OptionHolder(Optional<T> value) {
-            this.value = value;
+        public When2TABR(Predicate<A> predicateA, Predicate<B> predicateB) {
+            this.predicateA = predicateA;
+            this.predicateB = predicateB;
         }
 
-        /**
-         * if not null return the function result
-         * else return null
-         */
-        public <R> R notNull(Function<T, R> fn) {
-            return !value.isPresent() ? null : fn.apply(value.get());
+        public Match2TABR<T, A, B, R> get(Function<T, R> fn) {
+            this.function = fn;
+            return parent;
         }
 
-        public static <T> Optional<T> empty() {
-            return Optional.empty();
+        public Match2TABR<T, A, B, R> get(R v) {
+            return get(const2fun(v));
         }
-
-        public static <T> Optional<T> of(T value) {
-            return Optional.of(value);
-        }
-
-        public static <T> Optional<T> ofNullable(T value) {
-            return Optional.ofNullable(value);
-        }
-
-        public T get() {
-            return value.get();
-        }
-
-        public boolean isPresent() {
-            return value.isPresent();
-        }
-
-        public void ifPresent(Consumer<? super T> consumer) {
-            value.ifPresent(consumer);
-        }
-
-        public Optional<T> filter(Predicate<? super T> predicate) {
-            return value.filter(predicate);
-        }
-
-        public <U> Optional<U> map(Function<? super T, ? extends U> mapper) {
-            return value.map(mapper);
-        }
-
-        public <U> Optional<U> flatMap(Function<? super T, Optional<U>> mapper) {
-            return value.flatMap(mapper);
-        }
-
-        public T orElse(T v) {
-            return value.orElse(v);
-        }
-
-        public T orElseGet(Supplier<? extends T> other) {
-            return value.orElseGet(other);
-        }
-
-        public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
-            return value.orElseThrow(exceptionSupplier);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return value.equals(obj);
-        }
-
-        @Override
-        public int hashCode() {
-            return value.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return value.toString();
-        }
-
     }
 
-    @Test
-    public void test() {
-        String e = ".shit";
-        String re = match(e)
-                .when(s -> s.startsWith(".")).get(ss -> ss + "...........")
-                .when(s -> s.startsWith("_")).get(ss -> ss + "_____________")
-                .orElse("default value")
-                .get();
-        System.out.println(re);
-        int result = match(e)
-                .when(s -> s.startsWith("never match")).get(ss -> ss + "never match...........")
-                .getMatch().notNull(ss -> ss.length());
-        System.out.println(result);
 
+    private static <T, R> Function<T, R> const2fun(R v) {
+        return t -> v;
     }
+
+    private static <T> boolean equal(T v, T t) {
+        return v == t || v != null && v.equals(t);
+    }
+
 
 }
