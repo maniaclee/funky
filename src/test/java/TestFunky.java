@@ -18,9 +18,9 @@ public class TestFunky {
 
         /*lambda返回都为包装类，如果int re=null, 报错*/
         String e = "shit";
-        match(e).when(s -> s.startsWith(".")).then(s -> System.out.printf(s + "..........."))
-                .when(s -> s.startsWith("_")).then(s -> System.out.printf(s + "_____________"))
-                .orElse(s -> System.out.println("nothing match"))
+        match(e).when(s -> s.startsWith(".")).then(print(e + "..........."))
+                .when(s -> s.startsWith("_")).then(println(e + "_____________"))
+                .orElse(println("nothing match"))
                 .doMatch();
 
         String logo = "ano";

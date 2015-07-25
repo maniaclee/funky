@@ -18,10 +18,10 @@ Pattern match for jdk 1.8
 ###2.  match and then
 ```java
         String e = "shit";
-        match(e).when(s -> s.startsWith(".")).then(s -> System.out.printf(s + "..........."))
-                .when(s -> s.startsWith("_")).then(s -> System.out.printf(s + "_____________"))
-                .orElse(s -> System.out.println("nothing match"))
-                .doMatch();
+        match(e).when(s -> s.startsWith(".")).then(print(e + "..........."))
+                        .when(s -> s.startsWith("_")).then(println(e + "_____________"))
+                        .orElse(println("nothing match"))
+                        .doMatch();
 ```
 ###3.  map with Tuple
 ```java

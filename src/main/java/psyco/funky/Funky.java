@@ -46,6 +46,14 @@ public class Funky {
         return t -> t == value || t != null && t.compareTo(value) <= 0;
     }
 
+    public static <T> Consumer<T> println(T v) {
+        return e -> System.out.println(v);
+    }
+
+    public static <T> Consumer<T> print(T v) {
+        return e -> System.out.print(v);
+    }
+
     public static <T> Match1R<T> match(T t) {
         return new Match1R(t);
     }
